@@ -1,8 +1,103 @@
-<script type="text/javascript">
-  const eventSource = new EventSource('/sse');
-  eventSource.onmessage = ({ data }) => {
-    const message = document.createElement('li');
-    message.innerText = 'New message: ' + data;
-    document.body.appendChild(message);
-  };
-</script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polling Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .section {
+        margin-bottom: 30px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin-bottom: 8px;
+        padding: 8px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="section" id="long-poll-section">
+      <h2>Long Polling Updates</h2>
+      <ul id="long-poll-messages"></ul>
+    </div>
+
+    <div class="section" id="sse-section">
+      <h2>Server-Sent Events</h2>
+      <ul id="sse-messages"></ul>
+    </div>
+
+    <div class="section" id="websocket-section">
+      <h2>Additional Content</h2>
+      <p>This section is reserved for future use.</p>
+    </div>
+
+    <script type="text/javascript">
+      // SSE Implementation
+      const eventSource = new EventSource('/sse');
+      eventSource.onmessage = ({ data }) => {
+        const message = document.createElement('li');
+        const dataJson = JSON.parse(data);
+        const dataMsg = dataJson.message;
+        message.innerText = `SSE message: ${dataMsg}`;
+        document.getElementById('sse-messages').appendChild(message);
+      };
+
+      // Long Polling Implementation
+      let lastEventId = 0;
+
+      function longPoll() {
+        const url = lastEventId ? `/poll?lastEventId=${lastEventId}` : '/poll';
+        console.log(
+          `calling long poll endpoint.... with event id: ${lastEventId}`,
+        );
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            // Update the lastEventId if we received an event
+            if (data.event) {
+              lastEventId = data.lastEventId;
+
+              const message = document.createElement('li');
+              const id = data.event.id;
+              const res = data.event.data.message;
+              message.innerText = `Poll Id: ${id}, Poll result: ${res}`;
+              document
+                .getElementById('long-poll-messages')
+                .appendChild(message);
+            } else {
+              console.log('Long polling timeout, reconnecting...');
+            }
+
+            // Immediately re-establish the connection
+            longPoll();
+          })
+          .catch((error) => {
+            console.error('Long polling error:', error);
+            // Retry after error with a short delay
+            setTimeout(longPoll, 2000);
+          });
+      }
+
+      // Start long polling
+      longPoll();
+    </script>
+  </body>
+</html>
