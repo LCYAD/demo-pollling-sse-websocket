@@ -32,6 +32,8 @@
         border-radius: 4px;
       }
     </style>
+    <!-- Add Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
   </head>
   <body>
     <div class="section" id="long-poll-section">
@@ -45,8 +47,8 @@
     </div>
 
     <div class="section" id="websocket-section">
-      <h2>Additional Content</h2>
-      <p>This section is reserved for future use.</p>
+      <h2>WebSocket Updates</h2>
+      <ul id="websocket-messages"></ul>
     </div>
 
     <script type="text/javascript">
@@ -98,6 +100,33 @@
 
       // Start long polling
       longPoll();
+
+      // WebSocket Implementation
+      const socket = io();
+      let messageCount = 0;
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+      });
+
+      socket.on('message', (data) => {
+        const message = document.createElement('li');
+        const { eventCounter, message: msg } = data;
+        message.innerText = `WebSocket Event Counter: ${eventCounter}, Message: ${msg}`;
+        document.getElementById('websocket-messages').appendChild(message);
+
+        setTimeout(() => {
+          const clientMessage = {
+            clientId: socket.id,
+            responseToEventCount: eventCounter,
+            text: `I got your message bro for event counter #${eventCounter}`,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Send the response back to the server
+          socket.emit('clientMessage', clientMessage);
+        }, 3000);
+      });
     </script>
   </body>
 </html>
