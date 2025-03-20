@@ -13,12 +13,14 @@ import { join } from 'path';
 import { Observable } from 'rxjs';
 import { SseService } from './sse.service';
 import { LongPollService } from './longPoll.service';
+import { WebsocketGateway } from './websocket.gateway';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly sseService: SseService,
     private readonly longPollService: LongPollService,
+    private readonly websocketGateway: WebsocketGateway,
   ) {}
 
   @Get()
@@ -67,6 +69,16 @@ export class AppController {
     return {
       success: true,
       message: 'Long poll event triggered successfully',
+    };
+  }
+
+  @Post('websocket/trigger')
+  triggerWebsocketEvent(): { success: boolean; message: string } {
+    this.websocketGateway.sendEventToClient('websocket event triggered');
+
+    return {
+      success: true,
+      message: 'WebSocket event triggered successfully',
     };
   }
 }
