@@ -39,22 +39,19 @@ $ pnpm run start
 
 # watch mode
 $ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
 ```
 
-## Run tests
+## Tigger Endpoint via `curl`
 
 ```bash
-# unit tests
-$ pnpm run test
+# poll trigger
+$ curl -X POST <host:port>/poll/trigger -v
 
-# e2e tests
-$ pnpm run test:e2e
+# websocket trigger
+$ curl -X POST <host:port>/websocket/trigger -v
 
-# test coverage
-$ pnpm run test:cov
+# sse trigger
+$ curl -X POST <host:port>/websocket/trigger -v
 ```
 
 ## Deployment
